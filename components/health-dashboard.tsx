@@ -45,13 +45,18 @@ export function HealthDashboard() {
     setActiveTab("results")
   }
 
+  const handleLoadAnalysis = (analysis: HealthAnalysis) => {
+    setAnalysisResult(analysis)
+    setActiveTab("results")
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <header className="border-b border-slate-700/50 bg-slate-900/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-3">
             <div className="relative">
-              <Activity className="h-8 w-8 text-cyan-400" />
+              <Activity className="h-8 w-8 text-cyan-400 animate-heartbeat" />
               <div className="absolute -top-1 -right-1 h-3 w-3 bg-emerald-400 rounded-full animate-pulse" />
             </div>
             <div>
@@ -110,7 +115,7 @@ export function HealthDashboard() {
           </TabsContent>
 
           <TabsContent value="history" className="mt-6">
-            <HistoryPanel onLoadAnalysis={setAnalysisResult} />
+            <HistoryPanel onLoadAnalysis={handleLoadAnalysis} />
           </TabsContent>
         </Tabs>
       </main>

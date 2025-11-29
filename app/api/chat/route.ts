@@ -8,11 +8,17 @@ export async function POST(request: Request) {
 
     let response: string
 
-    try {
-      const prompt = buildChatPrompt(message, context)
-      response = await callGemini(prompt)
-    } catch (aiError) {
-      console.error("Gemini AI error, using fallback:", aiError)
+    const useAI = process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.length > 10
+
+    if (useAI) {
+      try {
+        const prompt = buildChatPrompt(message, context)
+        response = await callGemini(prompt)
+      } catch (aiError) {
+        console.error("Gemini AI error, using fallback:", aiError)
+        response = generateChatResponse(message, context)
+      }
+    } else {
       response = generateChatResponse(message, context)
     }
 

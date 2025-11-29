@@ -1,18 +1,16 @@
 // Gemini AI integration for health analysis
+
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY
 
-export async function callGemini(prompt: string, imageBase64?: string): Promise<string> {
-  if (!GEMINI_API_KEY) {
-    throw new Error("GEMINI_API_KEY not configured")
-  }
+const GEMINI_MODELS = ["gemini-1.5-pro", "gemini-1.5-flash", "gemini-pro"]
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`
+async function tryCallGemini(model: string, prompt: string, imageBase64?: string): Promise<string> {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`
 
   const parts: Array<{ text: string } | { inline_data: { mime_type: string; data: string } }> = [{ text: prompt }]
 
   // Add image if provided
   if (imageBase64) {
-    // Extract mime type and base64 data
     const matches = imageBase64.match(/^data:([^;]+);base64,(.+)$/)
     if (matches) {
       parts.unshift({
@@ -30,11 +28,7 @@ export async function callGemini(prompt: string, imageBase64?: string): Promise<
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      contents: [
-        {
-          parts,
-        },
-      ],
+      contents: [{ parts }],
       generationConfig: {
         temperature: 0.7,
         topK: 40,
@@ -52,8 +46,7 @@ export async function callGemini(prompt: string, imageBase64?: string): Promise<
 
   if (!response.ok) {
     const errorText = await response.text()
-    console.error("Gemini API error:", errorText)
-    throw new Error(`Gemini API error: ${response.status}`)
+    throw new Error(`Gemini API error (${model}): ${response.status} - ${errorText}`)
   }
 
   const data = await response.json()
@@ -62,23 +55,47 @@ export async function callGemini(prompt: string, imageBase64?: string): Promise<
     return data.candidates[0].content.parts[0].text
   }
 
-  throw new Error("No response from Gemini")
+  throw new Error(`No response from Gemini (${model})`)
+}
+
+export async function callGemini(prompt: string, imageBase64?: string): Promise<string> {
+  if (!GEMINI_API_KEY) {
+    throw new Error("GEMINI_API_KEY not configured")
+  }
+
+  let lastError: Error | null = null
+
+  // Try each model in order
+  for (const model of GEMINI_MODELS) {
+    // Retry each model up to 2 times
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const result = await tryCallGemini(model, prompt, imageBase64)
+        return result
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error))
+        // Wait before retry (exponential backoff)
+        if (attempt < 1) {
+          await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1)))
+        }
+      }
+    }
+  }
+
+  throw lastError || new Error("All Gemini API attempts failed")
 }
 
 export function cleanGeminiResponse(response: string): string {
-  // Remove markdown code blocks if present
   let cleaned = response.trim()
 
-  // Remove \`\`\`json or \`\`\` at the start
-  if (cleaned.startsWith("```json")) {
-    cleaned = cleaned.slice(7)
-  } else if (cleaned.startsWith("```")) {
-    cleaned = cleaned.slice(3)
-  }
+  // Remove markdown code blocks
+  cleaned = cleaned.replace(/^```(?:json)?\s*/i, "")
+  cleaned = cleaned.replace(/\s*```$/i, "")
 
-  // Remove \`\`\` at the end
-  if (cleaned.endsWith("```")) {
-    cleaned = cleaned.slice(0, -3)
+  // Find JSON object in the response
+  const jsonMatch = cleaned.match(/\{[\s\S]*\}/)
+  if (jsonMatch) {
+    cleaned = jsonMatch[0]
   }
 
   return cleaned.trim()
@@ -108,13 +125,14 @@ ML RISK SCORES:
 
 ${hasImage ? "A medical scan image has also been provided for analysis." : ""}
 
-Please provide your response in the following JSON format (respond ONLY with valid JSON, no markdown):
+IMPORTANT: Respond with ONLY valid JSON, no markdown formatting, no code blocks. Use this exact structure:
+
 {
-  "explanation": "A detailed 3-4 sentence explanation of the patient's health status based on vitals, symptoms, and risk scores. Be specific about what the numbers mean.",
-  "imageAnalysis": ${hasImage ? '"Detailed analysis of the provided medical image, noting any visible abnormalities, areas of concern, or normal findings. Be specific about what you observe."' : "null"},
-  "precautions": ["5 specific precautions or recommendations based on the analysis"],
-  "seekHelpWhen": "A clear description of warning signs that should prompt immediate medical attention",
-  "doctorQuestions": ["5 specific questions the patient should ask their doctor based on this analysis"]
+  "explanation": "A detailed 3-4 sentence explanation of the patient's health status based on vitals, symptoms, and risk scores.",
+  "imageAnalysis": ${hasImage ? '"Detailed analysis of the provided medical image."' : "null"},
+  "precautions": ["precaution 1", "precaution 2", "precaution 3", "precaution 4", "precaution 5"],
+  "seekHelpWhen": "Description of warning signs that should prompt immediate medical attention.",
+  "doctorQuestions": ["question 1", "question 2", "question 3", "question 4", "question 5"]
 }`
 }
 

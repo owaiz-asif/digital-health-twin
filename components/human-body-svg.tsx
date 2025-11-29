@@ -48,7 +48,7 @@ export function HumanBodySvg({ affectedRegion, scores }: Props) {
 
     // Animate glow
     const interval = setInterval(() => {
-      setGlowIntensity((prev) => (prev + 0.1) % 1)
+      setGlowIntensity((prev) => (prev + 0.05) % 1)
     }, 50)
 
     return () => clearInterval(interval)

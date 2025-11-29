@@ -58,7 +58,7 @@ export function HealthResults({ analysis }: Props) {
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement("a")
         a.href = url
-        a.download = `health-report-${new Date().toISOString().split("T")[0]}.pdf`
+        a.download = `health-report-${new Date().toISOString().split("T")[0]}.html`
         document.body.appendChild(a)
         a.click()
         document.body.removeChild(a)
@@ -71,15 +71,10 @@ export function HealthResults({ analysis }: Props) {
     }
   }
 
-  const maxScore = Math.max(...Object.values(analysis.scores))
-  const primaryConcern = Object.entries(analysis.scores).find(
-    ([, score]) => score === maxScore,
-  )?.[0] as keyof typeof SCORE_CONFIG
-
   return (
     <div className="space-y-6">
       {/* Header with Download */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h2 className="text-2xl font-bold text-white">Health Analysis Report</h2>
           <p className="text-slate-400 text-sm">Generated on {new Date(analysis.timestamp).toLocaleString()}</p>
@@ -91,7 +86,7 @@ export function HealthResults({ analysis }: Props) {
           className="border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/20 bg-transparent"
         >
           {isDownloading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
-          Export PDF
+          Export Report
         </Button>
       </div>
 
