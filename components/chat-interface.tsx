@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { MessageCircle, Send, Loader2, Bot, User } from "lucide-react"
 import type { HealthAnalysis } from "./health-dashboard"
 
@@ -100,7 +99,7 @@ export function ChatInterface({ analysisContext }: Props) {
         )}
       </CardHeader>
       <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
-        <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+        <div className="flex-1 overflow-auto p-4" ref={scrollRef}>
           <div className="space-y-4">
             {messages.map((message, index) => (
               <div key={index} className={`flex gap-3 ${message.role === "user" ? "flex-row-reverse" : ""}`}>
@@ -136,7 +135,7 @@ export function ChatInterface({ analysisContext }: Props) {
               </div>
             )}
           </div>
-        </ScrollArea>
+        </div>
         <div className="p-4 border-t border-slate-700/50">
           <form
             onSubmit={(e) => {
