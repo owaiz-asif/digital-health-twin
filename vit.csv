@@ -1,6 +1,0 @@
-disease,fasting_blood_sugar,random_blood_sugar,hba1c,systolic_bp,diastolic_bp,age_group,notes
-Diabetes,≥126 mg/dL,≥200 mg/dL,≥6.5%,N/A,N/A,Adults (≥18),High blood sugar; chronic condition
-Hypertension,<100 mg/dL,N/A,<5.7%,≥140,≥90,Adults (>30),High blood pressure; risk factor for heart disease
-Common Cold,Normal,Normal,Normal,Normal,Normal,All ages,Viral infection of upper respiratory tract
-Influenza,Normal,Normal,Normal,Normal,Normal,All ages,Viral infection with fever and body aches
-Pneumonia,Normal,Normal,Normal,Normal,Normal,All ages,Lung infection; often bacterial

@@ -14,8 +14,8 @@ def train_model():
     """Train model from symptoms and vitals CSV files"""
     
     # Load data
-    symptoms_df = pd.read_csv("symptoms.csv")
-    vitals_df = pd.read_csv("vitals.csv")
+    symptoms_df = pd.read_csv("dbackend/igital-health-twin/symptoms.csv")
+    vitals_df = pd.read_csv("backend/digital-health-twin/vitals.csv")
     
     # Get unique diseases
     diseases = symptoms_df['disease'].unique()
